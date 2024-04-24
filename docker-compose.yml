@@ -1,0 +1,45 @@
+networks:
+  moodle-network:
+    driver: bridge
+
+services:
+  moodle:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      ports:
+        - "80:80"
+        - "443:443"
+      depends_on:
+        - db
+      entrypoint: /entrypoint.sh
+      environment:
+        - MOODLE_DBTYPE=pgsql
+        - MOODLE_DBHOST=db
+        - MOODLE_DBUSER=moodle
+        - MOODLE_DBPASS=senha
+        - MOODLE_DBNAME=moodle
+      volumes:
+        - moodledata:/var/www/html/moodledata
+      links:
+      - db
+
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - PGINITDB_ARGS=--auth-local peer --auth-host=scram-sha-256
+      - PGROOT=/var/lib/postgresql
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=moodle
+      - POSTGRES_PASSWORD=senha
+      - POSTGRES_DB=moodle
+      - PGPORT=5432
+      - PGSSLMODE=prefer
+    volumes:
+      - postgresdata:/var/lib/postgresql/data/pgdata
+  
+volumes:
+  moodledata:
+  postgresdata:
